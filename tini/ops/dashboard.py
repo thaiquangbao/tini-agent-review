@@ -1195,9 +1195,12 @@ def main() -> None:
     # Port precedence: TINI_DASHBOARD_PORT, then the conventional PORT (used by
     # deploy platforms and IDE preview panes), then 9000. If it's taken, walk on.
     base = int(os.getenv("TINI_DASHBOARD_PORT") or os.getenv("PORT") or PORT)
+    # Loopback by default: the dashboard has no login and can edit .env. Only a
+    # container sets 0.0.0.0, and its port mapping decides who can reach it.
+    host = os.getenv("TINI_DASHBOARD_HOST", "127.0.0.1")
     for port in range(base, base + 10):  # walk past a busy port instead of crashing
         try:
-            server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+            server = ThreadingHTTPServer((host, port), Handler)
         except OSError:
             print(f"port {port} busy, trying {port + 1}…")
             continue
